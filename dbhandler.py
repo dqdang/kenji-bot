@@ -15,7 +15,8 @@ engine = sql.create_engine(url, pool_size=17, client_encoding='utf8')
 
 class Seen(Base):
     __tablename__ = "seen"
-    url = Column(String, primary_key=True)
+    id = Column(Integer, primary_key=True)
+    url = Column(String)
 
 
 table_dict = {
@@ -35,21 +36,21 @@ def create_tables():
     sess.close()
 
 
-def entry_exists(url, sess=start_sess()):
-    return sess.query(Seen).filter(Seen.url == url).scalar()
+def url_exists(url, sess=start_sess()):
+    return sess.query(Seen).filter(Seen.id == url).scalar()
 
 
-def insert_entry(url):
+def insert_url(value, url):
     sess = start_sess()
 
-    if entry_exists(url, sess):
-        change_url(url)
+    if url_exists(value, sess):
         sess.close()
         return False
 
-    entry = Seen(url=url)
+    url = Seen(id=value)
+    url.url = url
 
-    sess.add(entry)
+    sess.add(url)
     sess.commit()
     sess.close()
     return True
@@ -73,21 +74,23 @@ def get_table(table, column):
     return [] if len(results) == 0 else list(zip(*results))[0]
 
 
-def get_url(url):
+def get_url(id):
     sess = start_sess()
-    entry = entry_exists(url, sess)
-    if entry:
+    url = url_exists(id, sess)
+    if url:
+        rv = url.url
         sess.close()
-        return entry
+        return rv
     sess.close()
     return None
 
 
-def change_url(url):
+def change_url(id, url):
     sess = start_sess()
-    entry = entry_exists(url, sess)
+    url = url_exists(id, sess)
 
-    if entry:
+    if url:
+        url.url = url
         sess.commit()
         sess.close()
         return True
@@ -96,11 +99,11 @@ def change_url(url):
     return False
 
 
-def delete_entry(url):
+def delete_url(id):
     sess = start_sess()
-    entry = entry_exists(url, sess)
+    url = url_exists(id, sess)
 
-    if entry:
+    if url:
         sess.delete(url)
         sess.commit()
         sess.close()
