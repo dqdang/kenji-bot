@@ -1,3 +1,4 @@
+import asyncio
 import dbhandler as db
 import discord
 import json
@@ -16,6 +17,7 @@ client = discord.Client()
 current_video = ""
 
 queries = ["-kenji", "-crimes", "-bonk", "-pats"]
+
 
 def find_channel(server, refresh=False):
     """
@@ -59,6 +61,7 @@ def detect_kenji_videos():
             video_links.append(base_video_url + i['id']['videoId'])
     return video_links[0]  # return first link (latest)
 
+
 @client.event
 async def on_message(message):
     global queries
@@ -66,7 +69,7 @@ async def on_message(message):
         return
 
     if message.content in queries:
-        url = detect_kenji_videos()
+        url = current_video
         await message.channel.send(url)
 
 
@@ -77,10 +80,13 @@ async def get_kenji_videos(server):
     channel = find_channel(server)
     while True:
         url = detect_kenji_videos()
-        if url and not db.id_exists(1).url and current_video != url:
+        if url and current_video != url:
+            print("New video found! Updating database.")
             await channel.send(url)
-            db.insert_url(1, url)
+            print(db.insert_url(1, url))
+            print(db.get_table("Seen", "url"))
             current_video = url
+        await asyncio.sleep(1)
 
 
 @client.event
