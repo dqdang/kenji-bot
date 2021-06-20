@@ -39,21 +39,19 @@ def create_tables():
 def url_exists(url, sess=start_sess()):
     return sess.query(Seen).filter(Seen.url == url).scalar()
 
+def id_exists(id, sess=start_sess()):
+    return sess.query(Seen).filter(Seen.id == id).scalar()
 
 def insert_url(value, url):
     sess = start_sess()
-
-    if url_exists(url, sess):
+    id = id_exists(value, sess)
+    if id:
+        id.url = url
+        sess.commit()
         sess.close()
-        return False
-
-    entry = Seen(id=value)
-    entry.url = url
-
-    sess.add(entry)
-    sess.commit()
+        return True
     sess.close()
-    return True
+    return False
 
 
 """ Private getters """
@@ -85,12 +83,11 @@ def get_url(id):
     return None
 
 
-def change_url(id, url):
-    sess = start_sess()
-    url = url_exists(url, sess)
+def change_url(id, url, sess=start_sess()):
+    id = id_exists(id)
 
-    if url:
-        url.url = url
+    if id:
+        id.url = url
         sess.commit()
         sess.close()
         return True

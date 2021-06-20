@@ -13,6 +13,9 @@ server_channels = {}  # Server channel cache
 
 client = discord.Client()
 
+current_video = ""
+
+queries = ["-kenji", "-crimes", "-bonk", "-pats"]
 
 def find_channel(server, refresh=False):
     """
@@ -33,6 +36,7 @@ def find_channel(server, refresh=False):
 
 
 def detect_kenji_videos():
+    global current_video
     api_key = GOOGLE_API_KEY
 
     base_video_url = 'https://www.youtube.com/watch?v='
@@ -40,50 +44,48 @@ def detect_kenji_videos():
     channel_id = "UC4er8qDSU1Y2IaTkC9gS9wA"
 
     first_url = base_search_url + \
-        'key={}&channelId={}&part=snippet,id&order=date&maxResults=25'.format(
+        'key={}&channelId={}&part=snippet,id&order=date&maxResults=1'.format(
             api_key, channel_id)
 
     video_links = []
     url = first_url
-    while True:
-        inp = urllib.request.urlopen(url)
-        resp = json.load(inp)
+    if db.id_exists(1).url == current_video:
+        return current_video
+    inp = urllib.request.urlopen(url)
+    resp = json.load(inp)
 
-        for i in resp['items']:
-            if i['id']['kind'] == "youtube#video":
-                video_links.append(base_video_url + i['id']['videoId'])
-
-        try:
-            next_page_token = resp['nextPageToken']
-            url = first_url + '&pageToken={}'.format(next_page_token)
-        except:
-            break
+    for i in resp['items']:
+        if i['id']['kind'] == "youtube#video":
+            video_links.append(base_video_url + i['id']['videoId'])
     return video_links[0]  # return first link (latest)
-
 
 @client.event
 async def on_message(message):
+    global queries
     if message.author == client.user:
         return
 
-    if message.content:
+    if message.content in queries:
         url = detect_kenji_videos()
         await message.channel.send(url)
 
 
 async def get_kenji_videos(server):
+    global current_video
     await client.wait_until_ready()
     counter = 0
     channel = find_channel(server)
     while True:
         url = detect_kenji_videos()
-        if url and not db.url_exists(url):
+        if url and not db.id_exists(1).url and current_video != url:
             await channel.send(url)
-            db.change_url(1, url)
+            db.insert_url(1, url)
+            current_video = url
 
 
 @client.event
 async def on_ready():
+    global current_video
     for guild in client.guilds:
         if guild.name == GUILD:
             break
@@ -93,6 +95,11 @@ async def on_ready():
         f'{guild.name}(id: {guild.id})'
     )
 
-
+current_video = db.id_exists(1).url
+print("Current video: {}".format(db.id_exists(1).url))
 client.loop.create_task(get_kenji_videos(GUILD))
-client.run(DISCORD_BOT_TOKEN)
+try:
+    client.run(DISCORD_BOT_TOKEN)
+finally:
+    if not db.id_exists(1).url != current_video:
+        db.change_url(1, current_video)
