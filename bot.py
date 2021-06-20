@@ -61,6 +61,16 @@ def detect_kenji_videos():
     return video_links[0]  # return first link (latest)
 
 
+@client.event
+async def on_message(message):
+    if message.author == client.user:
+        return
+
+    if message.content:
+        url = detect_kenji_videos()
+        await message.channel.send(url)
+
+
 async def get_kenji_videos(server):
     await client.wait_until_ready()
     counter = 0
@@ -69,7 +79,7 @@ async def get_kenji_videos(server):
         url = detect_kenji_videos()
         if url and not db.url_exists(url):
             await channel.send(url)
-            db.insert_url(1, url)
+            db.change_url(1, url)
 
 
 @client.event
