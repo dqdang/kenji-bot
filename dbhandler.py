@@ -87,7 +87,7 @@ def get_url(id):
 
 def change_url(id, url):
     sess = start_sess()
-    url = url_exists(id, sess)
+    url = url_exists(url, sess)
 
     if url:
         url.url = url
