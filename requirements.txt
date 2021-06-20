@@ -1,0 +1,4 @@
+SQLAlchemy==1.4.18
+discord.py==1.7.3
+psycopg2==2.9.1
+discord==1.0.1
