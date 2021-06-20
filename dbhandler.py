@@ -9,7 +9,7 @@ Base = declarative_base()
 
 # heroku pg:psql -a groovy3
 # import dburl
-url = os.environ['DATABASE_URL']
+url = os.environ['DATABASE']
 engine = sql.create_engine(url, pool_size=17, client_encoding='utf8')
 
 
