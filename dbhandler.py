@@ -37,20 +37,20 @@ def create_tables():
 
 
 def url_exists(url, sess=start_sess()):
-    return sess.query(Seen).filter(Seen.id == url).scalar()
+    return sess.query(Seen).filter(Seen.url == url).scalar()
 
 
 def insert_url(value, url):
     sess = start_sess()
 
-    if url_exists(value, sess):
+    if url_exists(url, sess):
         sess.close()
         return False
 
-    url = Seen(id=value)
-    url.url = url
+    entry = Seen(id=value)
+    entry.url = url
 
-    sess.add(url)
+    sess.add(entry)
     sess.commit()
     sess.close()
     return True

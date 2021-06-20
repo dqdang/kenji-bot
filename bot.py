@@ -67,9 +67,9 @@ async def get_kenji_videos(server):
     channel = find_channel(server)
     while True:
         url = detect_kenji_videos()
-        if url and not db.url_exists(1, url):
+        if url and not db.url_exists(url):
             await channel.send(url)
-            db.insert_entry(1, url)
+            db.insert_url(1, url)
 
 
 @client.event
