@@ -6,6 +6,8 @@ import json
 import os
 import requests
 import re
+import time
+
 
 DISCORD_BOT_TOKEN = os.environ['DISCORD_BOT_TOKEN']
 GUILD = os.environ['GUILD']
