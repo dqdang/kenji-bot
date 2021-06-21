@@ -1,14 +1,15 @@
 import asyncio
+from bs4 import BeautifulSoupimport
 import dbhandler as db
 import discord
 import json
 import os
-import urllib.request
+import requests
+import re
 
 DISCORD_BOT_TOKEN = os.environ['DISCORD_BOT_TOKEN']
 GUILD = os.environ['GUILD']
 CHANNEL_NAME = os.environ['CHANNEL_NAME']
-GOOGLE_API_KEY = os.environ['GOOGLE_API_KEY']
 
 server_channels = {}  # Server channel cache
 
@@ -39,27 +40,26 @@ def find_channel(server, refresh=False):
 
 def detect_kenji_videos():
     global current_video
-    api_key = GOOGLE_API_KEY
 
-    base_video_url = 'https://www.youtube.com/watch?v='
-    base_search_url = 'https://www.googleapis.com/youtube/v3/search?'
-    channel_id = "UC4er8qDSU1Y2IaTkC9gS9wA"
+    channel = 'https://www.youtube.com/channel/UC4er8qDSU1Y2IaTkC9gS9wA/videos'
 
-    first_url = base_search_url + \
-        'key={}&channelId={}&part=snippet,id&order=date&maxResults=1'.format(
-            api_key, channel_id)
-
-    video_links = []
-    url = first_url
-    if db.id_exists(1).url == current_video:
-        return current_video
-    inp = urllib.request.urlopen(url)
-    resp = json.load(inp)
-
-    for i in resp['items']:
-        if i['id']['kind'] == "youtube#video":
-            video_links.append(base_video_url + i['id']['videoId'])
-    return video_links[0]  # return first link (latest)
+    resp = requests.get(channel)
+    soup = BeautifulSoup(resp.text, "lxml")
+    data = soup.find_all("script")
+    for point in data:
+        try:
+            pattern = re.compile("var ytInitialData = (.*?);")
+            m = pattern.match(point.string)
+            if m:
+                break
+        except Exception as e:
+            continue
+    channel_info = json.loads(m.groups()[0])
+    latestVideoWatchId = channel_info["contents"]["twoColumnBrowseResultsRenderer"]["tabs"][1]["tabRenderer"]["content"][
+        "sectionListRenderer"]["contents"][0]["itemSectionRenderer"]["contents"][0]["gridRenderer"]["items"][0]["gridVideoRenderer"]["videoId"]
+    # x.contents.twoColumnBrowseResultsRenderer.tabs[1].tabRenderer.content.sectionListRenderer.contents[0].itemSectionRenderer.contents[0].gridRenderer.items[0].gridVideoRenderer.videoId
+    url = "https://www.youtube.com/watch?v=" + latestVideoWatchId
+    return url
 
 
 @client.event
@@ -87,6 +87,7 @@ async def get_kenji_videos(server):
             print(db.get_table("Seen", "url"))
             current_video = url
         await asyncio.sleep(1)
+        time.sleep(10)
 
 
 @client.event
