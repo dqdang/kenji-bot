@@ -1,5 +1,5 @@
 import asyncio
-from bs4 import BeautifulSoupimport
+from bs4 import BeautifulSoup
 import dbhandler as db
 import discord
 import json
