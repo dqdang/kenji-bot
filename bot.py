@@ -14,7 +14,8 @@ GUILD = os.environ['GUILD']
 CHANNEL_NAME = os.environ['CHANNEL_NAME']
 
 server_channels = {}  # Server channel cache
-
+url_regex = "(http|ftp|https)://([\w_-]+(?:(?:\.[\w_-]+)+))([\w.,@?^=%&:/~+#-]*[\w@?^=%&/~+#-])?"
+pattern = re.compile(url_regex)
 client = discord.Client()
 
 current_video = ""
@@ -41,8 +42,6 @@ def find_channel(server, refresh=False):
 
 
 def detect_kenji_videos():
-    global current_video
-
     channel = 'https://www.youtube.com/channel/UC4er8qDSU1Y2IaTkC9gS9wA/videos'
 
     resp = requests.get(channel)
@@ -67,7 +66,9 @@ def detect_kenji_videos():
 @client.event
 async def on_message(message):
     global queries
-    if message.author == client.user:
+    global current_video
+    global pattern
+    if message.author == client.user or pattern.match(message.content):
         return
 
     if message.content in queries:
