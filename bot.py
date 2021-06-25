@@ -21,7 +21,7 @@ client = discord.Client()
 current_video = ""
 
 queries = ["-kenji", "-crimes", "-bonk", "-pats"]
-
+seen = set()
 
 def find_channel(server, refresh=False):
     """
@@ -83,11 +83,12 @@ async def get_kenji_videos(server):
     channel = find_channel(server)
     while True:
         url = detect_kenji_videos()
-        if url and current_video != url:
+        if url and current_video != url and current_video not in seen:
             print("New video found! Updating database.")
             await channel.send(url)
             print(db.insert_url(1, url))
             print(db.get_table("Seen", "url"))
+            seen.add(current_video)
             current_video = url
         await asyncio.sleep(1)
         time.sleep(10)
