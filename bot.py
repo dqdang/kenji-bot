@@ -83,6 +83,7 @@ async def get_kenji_videos(server):
     await client.wait_until_ready()
     channel = find_channel(server)
     cur_time = time.time()
+    end_time = cur_time
     while True:
         wait_duration = end_time - cur_time
         if wait_duration > 30:
