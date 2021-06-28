@@ -23,6 +23,7 @@ current_video = ""
 queries = ["-kenji", "-crimes", "-bonk", "-pats"]
 seen = set()
 
+
 def find_channel(server, refresh=False):
     """
     Find and return the channel to log the voice events to.
@@ -72,6 +73,7 @@ async def on_message(message):
         return
 
     if message.content in queries:
+        print("Request to send most recent video received.")
         url = current_video
         await message.channel.send(url)
 
@@ -79,10 +81,14 @@ async def on_message(message):
 async def get_kenji_videos(server):
     global current_video
     await client.wait_until_ready()
-    counter = 0
     channel = find_channel(server)
+    cur_time = time.time()
     while True:
-        url = detect_kenji_videos()
+        wait_duration = end_time - cur_time
+        if wait_duration > 30:
+            url = detect_kenji_videos()
+        else:
+            url = None
         if url and current_video != url and current_video not in seen:
             print("New video found! Updating database.")
             await channel.send(url)
@@ -90,8 +96,9 @@ async def get_kenji_videos(server):
             print(db.get_table("Seen", "url"))
             seen.add(current_video)
             current_video = url
+            cur_time = time.time()
         await asyncio.sleep(1)
-        time.sleep(10)
+        end_time = time.time()
 
 
 @client.event
