@@ -43,26 +43,28 @@ def find_channel(server, refresh=False):
 
 
 def detect_kenji_videos():
-    channel = 'https://www.youtube.com/channel/UC4er8qDSU1Y2IaTkC9gS9wA/videos'
+    channel = "https://www.youtube.com/channel/UC4er8qDSU1Y2IaTkC9gS9wA/videos"
 
     resp = requests.get(channel)
     soup = BeautifulSoup(resp.text, "lxml")
     data = soup.find_all("script")
+    url = None
+
     for point in data:
         try:
             pattern = re.compile("var ytInitialData = (.*?);")
             m = pattern.match(point.string)
             if m:
+                channel_info = json.loads(m.groups()[0])
+                latest_video_watch_id = channel_info["contents"]["twoColumnBrowseResultsRenderer"]["tabs"][1]["tabRenderer"]["content"][
+                    "sectionListRenderer"]["contents"][0]["itemSectionRenderer"]["contents"][0]["gridRenderer"]["items"][0]["gridVideoRenderer"]["videoId"]
+                # x.contents.twoColumnBrowseResultsRenderer.tabs[1].tabRenderer.content.sectionListRenderer.contents[0].itemSectionRenderer.contents[0].gridRenderer.items[0].gridVideoRenderer.videoId
+                url = "https://www.youtube.com/watch?v=" + latest_video_watch_id
                 break
         except Exception as e:
             continue
-    channel_info = json.loads(m.groups()[0])
-    latestVideoWatchId = channel_info["contents"]["twoColumnBrowseResultsRenderer"]["tabs"][1]["tabRenderer"]["content"][
-        "sectionListRenderer"]["contents"][0]["itemSectionRenderer"]["contents"][0]["gridRenderer"]["items"][0]["gridVideoRenderer"]["videoId"]
-    # x.contents.twoColumnBrowseResultsRenderer.tabs[1].tabRenderer.content.sectionListRenderer.contents[0].itemSectionRenderer.contents[0].gridRenderer.items[0].gridVideoRenderer.videoId
-    url = "https://www.youtube.com/watch?v=" + latestVideoWatchId
-    return url
 
+    return url
 
 @client.event
 async def on_message(message):
@@ -83,11 +85,12 @@ async def get_kenji_videos(server):
     await client.wait_until_ready()
     channel = find_channel(server)
     cur_time = time.time()
-    end_time = cur_time
+    found_time = cur_time - 30
     while True:
-        wait_duration = end_time - cur_time
+        wait_duration = cur_time - found_time
         if wait_duration > 30:
             url = detect_kenji_videos()
+            found_time = time.time()
         else:
             url = None
         if url and current_video != url and current_video not in seen:
@@ -95,11 +98,10 @@ async def get_kenji_videos(server):
             await channel.send(url)
             print(db.insert_url(1, url))
             print(db.get_table("Seen", "url"))
-            seen.add(current_video)
             current_video = url
-            cur_time = time.time()
+            seen.add(current_video)
         await asyncio.sleep(1)
-        end_time = time.time()
+        cur_time = time.time()
 
 
 @client.event
@@ -116,6 +118,7 @@ async def on_ready():
 
 current_video = db.id_exists(1).url
 print("Current video: {}".format(db.id_exists(1).url))
+seen.add(current_video)
 client.loop.create_task(get_kenji_videos(GUILD))
 try:
     client.run(DISCORD_BOT_TOKEN)
