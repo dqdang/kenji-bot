@@ -94,6 +94,8 @@ async def get_kenji_videos(server):
             url = detect_kenji_videos()
             found_time = time.time()
             print(url)
+            print(seen)
+            print("Current Video: {}".format(current_video))
         else:
             url = None
         if url and current_video != url and current_video not in seen:
