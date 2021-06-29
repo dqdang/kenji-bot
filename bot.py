@@ -93,12 +93,9 @@ async def get_kenji_videos(server):
         if wait_duration >= 5:
             url = detect_kenji_videos()
             found_time = time.time()
-            print(url)
-            print(seen)
-            print("Current Video: {}".format(current_video))
         else:
             url = None
-        if url and current_video != url and current_video not in seen:
+        if url and current_video != url and url not in seen:
             print("New video found! Updating database.")
             await channel.send(url)
             print(db.insert_url(1, url))
