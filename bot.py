@@ -86,12 +86,14 @@ async def get_kenji_videos(server):
     await client.wait_until_ready()
     channel = find_channel(server)
     cur_time = time.time()
-    found_time = cur_time - 30
+    found_time = cur_time - 5
     while True:
         wait_duration = cur_time - found_time
-        if wait_duration > 30:
+        cur_time = time.time()
+        if wait_duration >= 5:
             url = detect_kenji_videos()
             found_time = time.time()
+            print(url)
         else:
             url = None
         if url and current_video != url and current_video not in seen:
@@ -102,7 +104,6 @@ async def get_kenji_videos(server):
             current_video = url
             seen.add(current_video)
         await asyncio.sleep(1)
-        cur_time = time.time()
 
 
 @client.event
