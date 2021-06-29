@@ -82,6 +82,7 @@ async def on_message(message):
 
 async def get_kenji_videos(server):
     global current_video
+    global seen
     await client.wait_until_ready()
     channel = find_channel(server)
     cur_time = time.time()
