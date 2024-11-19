@@ -8,7 +8,6 @@ import requests
 import re
 import time
 
-
 DISCORD_BOT_TOKEN = os.environ['DISCORD_BOT_TOKEN']
 GUILD = os.environ['GUILD']
 CHANNEL_NAME = os.environ['CHANNEL_NAME']
@@ -23,13 +22,7 @@ current_video = ""
 queries = ["-kenji", "-crimes", "-bonk", "-pats"]
 seen = set()
 
-
 def find_channel(server, refresh=False):
-    """
-    Find and return the channel to log the voice events to.
-    :param server: The server to find the channel for.
-    :param refresh: Whether to refresh the channel cache for this server.
-    """
     if not refresh and server in server_channels:
         return server_channels[server]
 
@@ -40,7 +33,6 @@ def find_channel(server, refresh=False):
             return channel
 
     return None
-
 
 def detect_kenji_videos():
     channel = "https://www.youtube.com/channel/UC4er8qDSU1Y2IaTkC9gS9wA/videos"
@@ -79,7 +71,6 @@ async def on_message(message):
         url = current_video
         await message.channel.send(url)
 
-
 async def get_kenji_videos(server):
     global current_video
     global seen
@@ -103,7 +94,6 @@ async def get_kenji_videos(server):
             current_video = url
             seen.add(current_video)
         await asyncio.sleep(1)
-
 
 @client.event
 async def on_ready():
